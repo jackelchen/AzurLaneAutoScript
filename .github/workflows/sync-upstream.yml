@@ -1,12 +1,9 @@
 name: Sync Fork with Upstream
 
 on:
-  # 计划任务 - 每天UTC时间00:00同步（北京时间08:00）
   schedule:
     - cron: '0 0 * * *'
-  # 支持手动触发
   workflow_dispatch:
-  # 推送触发（可选，当有push到master分支时也同步）
   push:
     branches:
       - master
@@ -15,39 +12,35 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # 需要写入权限来推送更改
+      contents: write
       
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # 获取所有历史记录，便于合并
-          ref: master     # 指定分支为master
+          fetch-depth: 0
+          ref: master
 
       - name: Configure Git
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git config pull.rebase false  # 使用merge而不是rebase
+          git config pull.rebase false
 
       - name: Add upstream repository
         run: |
-          # 检查是否已存在upstream远程
           if ! git remote | grep -q upstream; then
             git remote add upstream https://github.com/LmeSzinc/AzurLaneAutoScript.git
           fi
-          
-          # 显示远程仓库信息
           git remote -v
 
       - name: Fetch upstream changes
         run: |
-          git fetch upstream master  # 获取上游的master分支
+          git fetch upstream master
 
       - name: Check if merge is needed
         id: check
         run: |
-          # 检查是否有新提交
           git log HEAD..upstream/master --oneline > commits.txt
           if [ -s commits.txt ]; then
             echo "有新的提交需要同步"
@@ -64,14 +57,11 @@ jobs:
         if: steps.check.outputs.new_commits == 'true'
         id: merge
         run: |
-          # 设置冲突标志为false
           echo "CONFLICT_DETECTED=false" >> $GITHUB_ENV
           
-          # 尝试合并
           if git merge upstream/master --no-edit; then
             echo "✅ 合并成功，无冲突"
             
-            # 检查是否有更改需要提交
             if ! git diff --cached --quiet || ! git diff --quiet; then
               echo "有更改需要提交"
               git add .
@@ -81,42 +71,28 @@ jobs:
               $(git log HEAD..upstream/master@{1} --oneline | head -10 | sed 's/^/  • /')"
             fi
           else
-            # 合并失败，检测到冲突
             echo "❌ 检测到冲突，合并失败"
             echo "CONFLICT_DETECTED=true" >> $GITHUB_ENV
             
-            # 获取冲突文件列表
             conflict_files=$(git diff --name-only --diff-filter=U)
             echo "冲突文件列表:" > conflict_files.txt
             echo "$conflict_files" >> conflict_files.txt
             
-            # 取消合并
             git merge --abort
           fi
 
       - name: Send conflict notification
         if: steps.check.outputs.new_commits == 'true' && env.CONFLICT_DETECTED == 'true'
         run: |
-          # 读取冲突文件信息
           conflict_list=$(cat conflict_files.txt)
           
-          # 构建通知消息
-          message="🚨 GitHub 同步冲突"
-          body="仓库: ${{ github.repository }}
-冲突时间: $(date '+%Y-%m-%d %H:%M:%S')
-上游提交数: ${{ steps.check.outputs.commit_count }}
-冲突文件数: $(echo "$conflict_list" | wc -w)
-
-需要手动解决冲突！
-请访问: https://github.com/${{ github.repository }}/actions"
-          
-          # 发送Bark通知
+          # 使用单引号和转义构建 JSON
           curl -s \
             -X POST \
             -H "Content-Type: application/json" \
             -d '{
-              "body": "'"${body}"'",
-              "title": "'"${message}"'",
+              "body": "仓库: ${{ github.repository }}\n冲突时间: $(date +%Y-%m-%d\\ %H:%M:%S)\n上游提交数: ${{ steps.check.outputs.commit_count }}\n冲突文件数: $(echo \"$conflict_list\" | wc -w)\n\n需要手动解决冲突！\n请访问: https://github.com/${{ github.repository }}/actions",
+              "title": "🚨 GitHub 同步冲突",
               "group": "github",
               "url": "https://github.com/${{ github.repository }}/actions"
             }' \
@@ -127,10 +103,8 @@ jobs:
       - name: Push successful merge
         if: steps.check.outputs.new_commits == 'true' && env.CONFLICT_DETECTED == 'false'
         run: |
-          # 推送到你的仓库
           git push origin master
           
-          # 创建成功同步的摘要
           echo "## ✅ 同步成功" >> $GITHUB_STEP_SUMMARY
           echo "已成功同步上游更新到你的仓库" >> $GITHUB_STEP_SUMMARY
           echo "📊 同步了 ${{ steps.check.outputs.commit_count }} 个提交" >> $GITHUB_STEP_SUMMARY
@@ -140,7 +114,6 @@ jobs:
       - name: Create summary for conflicts
         if: steps.check.outputs.new_commits == 'true' && env.CONFLICT_DETECTED == 'true'
         run: |
-          # 创建冲突摘要
           echo "## 🚨 同步失败 - 检测到冲突" >> $GITHUB_STEP_SUMMARY
           echo "同步过程中检测到冲突，需要手动解决。" >> $GITHUB_STEP_SUMMARY
           echo "📊 尝试同步 ${{ steps.check.outputs.commit_count }} 个提交" >> $GITHUB_STEP_SUMMARY
