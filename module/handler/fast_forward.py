@@ -287,8 +287,8 @@ class FastForwardHandler(AutoSearchHandler):
         Pages:
             in: FLEET_PREPARATION
         """
-        if not self.map_is_auto_search:
-            return False
+        # if not self.map_is_auto_search:
+        #     return False
 
         logger.info('Auto search setting')
         self.fleet_preparation_sidebar_ensure(3)

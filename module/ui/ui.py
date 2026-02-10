@@ -258,6 +258,7 @@ class UI(InfoHandler):
                     button = page.links[page.parent]
                     self.device.click(button)
                     self.ui_button_interval_reset(button)
+                    self.device.sleep(1)
                     clicked = True
                     break
             if clicked:

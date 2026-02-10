@@ -1,0 +1,51 @@
+----------------------------还是要用↓--------------------------------------
+跳过工作树	git update-index --skip-worktree campaign/campaign_main/campaign_15_1.py module/handler/fast_forward.py module/ui/ui.py
+撤销跳过工作树	git update-index --no-skip-worktree campaign/campaign_main/campaign_15_1.py module/handler/fast_forward.py module/ui/ui.py
+查看所有已跳过工作树的文件	git ls-files -v | grep "^S"
+
+git fetch origin
+git reset --hard origin/master
+
+----------------------------不使用,只记录补丁-------------------------------
+# 1. 保存修改到补丁文件
+git diff > my-fixes.patch
+
+# 2. 恢复修改到原始状态
+git checkout -- .
+
+# 3. 拉取远程最新代码
+git pull origin master
+
+# 4. 应用补丁文件
+git apply my-fixes.patch
+-------------------------------------------------------------------------
+
+修改点:
+
+D:\AzurLaneAutoScript\campaign\campaign_main\campaign_15_1.py
+        MAP.weight_data = """
+23改            50 20 50 50 50 50 50 50
+24改            30 30 10 50 50 50 50 50
+            50 50 50 50 50 50 50 50
+            50 50 50 50 50 50 50 50
+            50 50 50 50 50 50 50 50
+            50 50 50 50 50 50 50 50
+            50 50 50 50 50 50 50 50
+        """
+
+D:\AzurLaneAutoScript\module\handler\fast_forward.py
+290改        # if not self.map_is_auto_search:
+291改        #     return False
+
+D:\AzurLaneAutoScript\module\ui\ui.py
+261+		               self.device.sleep(1)
+
+------------------------------------------------------------------------
+
+
+查看当前屏幕分辨率	adb -s <serial> shell wm size	返回类似 Physical size: 1080x1920 的信息。
+查看当前屏幕密度	adb -s <serial> shell wm density	返回类似 Physical density: 480 的信息。
+调整屏幕分辨率	adb -s <serial> shell wm size 720x1280	将分辨率设置为720x1280。
+调整屏幕密度	adb -s <serial> shell wm density 300	用于解决图标变大问题，需要根据新分辨率选择合适的密度值。常用值在280-320之间。
+重置屏幕分辨率到默认值	adb -s <serial> shell wm size reset	
+重置屏幕密度到默认值	adb -s <serial> shell wm density reset	

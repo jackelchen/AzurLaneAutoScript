@@ -1,0 +1,146 @@
+diff --git a/campaign/campaign_main/campaign_15_1.py b/campaign/campaign_main/campaign_15_1.py
+index f98c6da49..878041191 100644
+--- a/campaign/campaign_main/campaign_15_1.py
++++ b/campaign/campaign_main/campaign_15_1.py
+@@ -20,8 +20,8 @@ MAP.map_data = """
+     -- SP SP -- Me -- ME --
+ """
+ MAP.weight_data = """
+-    50 50 50 50 50 50 50 50
+-    50 50 50 50 50 50 50 50
++    50 20 50 50 50 50 50 50
++    50 30 10 50 50 50 50 50
+     50 50 50 50 50 50 50 50
+     50 50 50 50 50 50 50 50
+     50 50 50 50 50 50 50 50
+
+diff --git a/module/handler/fast_forward.py b/module/handler/fast_forward.py
+index dd9de15f3..17514ef86 100644
+--- a/module/handler/fast_forward.py
++++ b/module/handler/fast_forward.py
+@@ -287,8 +287,8 @@ class FastForwardHandler(AutoSearchHandler):
+         Pages:
+             in: FLEET_PREPARATION
+         """
+-        if not self.map_is_auto_search:
+-            return False
++        # if not self.map_is_auto_search:
++        #     return False
+
+         logger.info('Auto search setting')
+         self.fleet_preparation_sidebar_ensure(3)
+
+diff --git a/module/ui/ui.py b/module/ui/ui.py
+index 49a61f0f1..a99599695 100644
+--- a/module/ui/ui.py
++++ b/module/ui/ui.py
+@@ -258,6 +258,7 @@ class UI(InfoHandler):
+                     button = page.links[page.parent]
+                     self.device.click(button)
+                     self.ui_button_interval_reset(button)
++                    self.device.sleep(1)
+                     clicked = True
+                     break
+             if clicked:
+
+diff --git a/module/webui/app.py b/module/webui/app.py
+index 5848d8b81..eaf247bea 100644
+--- a/module/webui/app.py
++++ b/module/webui/app.py
+@@ -1512,10 +1512,74 @@ def app():
+             return
+         app_manage()
+
+-    app = asgi_app(
++    # Add API endpoints for controlling Alas
++    from starlette.applications import Starlette
++    from starlette.responses import JSONResponse, FileResponse
++    from starlette.routing import Route
++
++    # Create a Starlette instance
++    api_app = Starlette()
++
++    async def start_alas(request):
++        """Start Alas process"""
++        try:
++            # Get config_name from query parameter
++            config_name = request.query_params.get("config_name", "alas")
++            manager = ProcessManager.get_manager(config_name)
++            if not manager.alive:
++                manager.start(func="alas", ev=updater.event)
++                return JSONResponse({"status": "success", "message": f"Alas {config_name} started"})
++            else:
++                return JSONResponse({"status": "success", "message": f"Alas {config_name} is already running"})
++        except Exception as e:
++            return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
++
++    async def stop_alas(request):
++        """Stop Alas process"""
++        try:
++            # Get config_name from query parameter
++            config_name = request.query_params.get("config_name", "alas")
++            manager = ProcessManager.get_manager(config_name)
++            if manager.alive:
++                manager.stop()
++                return JSONResponse({"status": "success", "message": f"Alas {config_name} stopped"})
++            else:
++                return JSONResponse({"status": "success", "message": f"Alas {config_name} is not running"})
++        except Exception as e:
++            return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
++
++    async def get_alas_status(request):
++        """Get Alas process status"""
++        try:
++            # Get config_name from query parameter
++            config_name = request.query_params.get("config_name", "alas")
++            manager = ProcessManager.get_manager(config_name)
++            return JSONResponse({
++                "status": "success",
++                "running": manager.alive,
++                "state": manager.state
++            })
++        except Exception as e:
++            return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
++
++    # Add routes to the API app
++    api_app.routes.extend([
++        Route("/start", start_alas, methods=["POST"]),
++        Route("/stop", stop_alas, methods=["POST"]),
++        Route("/status", get_alas_status, methods=["GET"]),
++        # Add route for alas.html
++        Route("/alas.html", lambda request: FileResponse("alas.html")),
++    ])
++
++    # Mount FastAPI app to the main application
++    from starlette.routing import Mount
++    from module.webui.fastapi import asgi_app as create_asgi_app
++
++    # Create the main ASGI app
++    main_app = create_asgi_app(
+         applications=[index, manage],
+         cdn=cdn,
+-        static_dir=None,
++        static_dir=".",  # Set static directory to project root
+         debug=True,
+         on_startup=[
+             startup,
+@@ -1525,5 +1589,17 @@ def app():
+         ],
+         on_shutdown=[clearup],
+     )
+-
+-    return app
++
++    # Add API routes to the main app
++    main_app.routes.append(
++        Mount("/api", app=api_app)
++    )
++
++    # Add routes for HTML files
++    from starlette.routing import Route
++    from starlette.responses import FileResponse
++    main_app.routes.extend([
++        Route("/alas.html", lambda request: FileResponse("alas.html")),
++    ])
++
++    return main_app
