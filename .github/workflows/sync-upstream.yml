@@ -7,6 +7,8 @@ on:
   push:
     branches:
       - master
+    paths-ignore:
+      - '.github/workflows/**'   # 修改 workflow 文件不会触发运行
 
 jobs:
   sync:
@@ -61,15 +63,7 @@ jobs:
           
           if git merge upstream/master --no-edit; then
             echo "✅ 合并成功，无冲突"
-            
-            if ! git diff --cached --quiet || ! git diff --quiet; then
-              echo "有更改需要提交"
-              git add .
-              git commit -m "自动同步上游更新: $(date '+%Y-%m-%d %H:%M:%S')
-              
-              上游提交:
-              $(git log HEAD..upstream/master@{1} --oneline | head -10 | sed 's/^/  • /')"
-            fi
+            # 合并已自动创建提交，无需额外操作
           else
             echo "❌ 检测到冲突，合并失败"
             echo "CONFLICT_DETECTED=true" >> $GITHUB_ENV
@@ -83,20 +77,26 @@ jobs:
 
       - name: Send conflict notification
         if: steps.check.outputs.new_commits == 'true' && env.CONFLICT_DETECTED == 'true'
+        env:
+          REPO: ${{ github.repository }}
+          COMMIT_COUNT: ${{ steps.check.outputs.commit_count }}
         run: |
           conflict_list=$(cat conflict_files.txt)
           
-          # 使用单引号和转义构建 JSON
-          curl -s \
-            -X POST \
-            -H "Content-Type: application/json" \
-            -d '{
-              "body": "仓库: ${{ github.repository }}\n冲突时间: $(date +%Y-%m-%d\\ %H:%M:%S)\n上游提交数: ${{ steps.check.outputs.commit_count }}\n冲突文件数: $(echo \"$conflict_list\" | wc -w)\n\n需要手动解决冲突！\n请访问: https://github.com/${{ github.repository }}/actions",
-              "title": "🚨 GitHub 同步冲突",
-              "group": "github",
-              "url": "https://github.com/${{ github.repository }}/actions"
-            }' \
-            "https://api.day.app/N7xUCURtR3EWhsotV8oAUD/"
+          # 使用 jq 构建 JSON payload
+          payload=$(jq -n \
+            --arg repo "$REPO" \
+            --arg time "$(date '+%Y-%m-%d %H:%M:%S')" \
+            --arg count "$COMMIT_COUNT" \
+            --arg conflicts "$conflict_list" \
+            '{
+              body: ("仓库: " + $repo + "\n冲突时间: " + $time + "\n上游提交数: " + $count + "\n\n冲突文件:\n" + $conflicts + "\n\n需要手动解决冲突！\n请访问: https://github.com/" + $repo + "/actions"),
+              title: "🚨 GitHub 同步冲突",
+              group: "github",
+              url: ("https://github.com/" + $repo + "/actions")
+            }')
+          
+          curl -s -X POST -H "Content-Type: application/json" -d "$payload" "https://api.day.app/N7xUCURtR3EWhsotV8oAUD/"
           
           echo "已发送冲突通知"
 
