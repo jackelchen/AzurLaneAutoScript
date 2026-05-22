@@ -35,6 +35,15 @@ class AzurLaneAutoScript:
         except RequestHumanTakeover:
             logger.critical('Request human takeover')
             exit(1)
+        except DeviceNotFoundError as e:
+            logger.critical(f'Device not found: {e}')
+            self.save_error_log()
+            handle_notify(
+                self.config.Error_OnePushConfig,
+                title=f"Alas <{self.config_name}> stopped",
+                content=f"<{self.config_name}> Device not found - Program stopped",
+            )
+            exit(1)
         except Exception as e:
             logger.exception(e)
             exit(1)
@@ -47,6 +56,15 @@ class AzurLaneAutoScript:
             return device
         except RequestHumanTakeover:
             logger.critical('Request human takeover')
+            exit(1)
+        except DeviceNotFoundError as e:
+            logger.critical(f'Device not found: {e}')
+            self.save_error_log()
+            handle_notify(
+                self.config.Error_OnePushConfig,
+                title=f"Alas <{self.config_name}> stopped",
+                content=f"<{self.config_name}> Device not found - Program stopped",
+            )
             exit(1)
         except Exception as e:
             logger.exception(e)
@@ -94,43 +112,68 @@ class AzurLaneAutoScript:
             logger.info('Game server may be under maintenance or network may be broken, check server status now')
             self.checker.check_now()
             if self.checker.is_available():
-                logger.critical('Game page unknown')
+                logger.warning('Game page unknown, will restart game after 10 minutes')
                 self.save_error_log()
                 handle_notify(
                     self.config.Error_OnePushConfig,
-                    title=f"Alas <{self.config_name}> crashed",
-                    content=f"<{self.config_name}> GamePageUnknownError",
+                    title=f"Alas <{self.config_name}> restarting",
+                    content=f"<{self.config_name}> GamePageUnknownError - Restarting in 10 minutes",
                 )
-                exit(1)
+                logger.info('Waiting 10 minutes before restarting game...')
+                self.device.sleep(600)  # 10 minutes
+                self.config.task_call('Restart')
+                return False
             else:
                 self.checker.wait_until_available()
                 return False
         except ScriptError as e:
             logger.exception(e)
-            logger.critical('This is likely to be a mistake of developers, but sometimes just random issues')
-            handle_notify(
-                self.config.Error_OnePushConfig,
-                title=f"Alas <{self.config_name}> crashed",
-                content=f"<{self.config_name}> ScriptError",
-            )
-            exit(1)
-        except RequestHumanTakeover:
-            logger.critical('Request human takeover')
-            handle_notify(
-                self.config.Error_OnePushConfig,
-                title=f"Alas <{self.config_name}> crashed",
-                content=f"<{self.config_name}> RequestHumanTakeover",
-            )
-            exit(1)
-        except Exception as e:
-            logger.exception(e)
+            logger.warning('This is likely to be a mistake of developers, but sometimes just random issues')
+            logger.warning('Will restart game after 10 minutes')
             self.save_error_log()
             handle_notify(
                 self.config.Error_OnePushConfig,
-                title=f"Alas <{self.config_name}> crashed",
-                content=f"<{self.config_name}> Exception occured",
+                title=f"Alas <{self.config_name}> restarting",
+                content=f"<{self.config_name}> ScriptError - Restarting in 10 minutes",
+            )
+            logger.info('Waiting 10 minutes before restarting game...')
+            self.device.sleep(600)  # 10 minutes
+            self.config.task_call('Restart')
+            return False
+        except DeviceNotFoundError as e:
+            logger.critical(f'Device not found: {e}')
+            self.save_error_log()
+            handle_notify(
+                self.config.Error_OnePushConfig,
+                title=f"Alas <{self.config_name}> stopped",
+                content=f"<{self.config_name}> Device not found - Program stopped",
             )
             exit(1)
+        except RequestHumanTakeover:
+            logger.warning('Request human takeover - will restart game after 10 minutes')
+            self.save_error_log()
+            handle_notify(
+                self.config.Error_OnePushConfig,
+                title=f"Alas <{self.config_name}> restarting",
+                content=f"<{self.config_name}> RequestHumanTakeover - Restarting in 10 minutes",
+            )
+            logger.info('Waiting 10 minutes before restarting game...')
+            self.device.sleep(600)  # 10 minutes
+            self.config.task_call('Restart')
+            return False
+        except Exception as e:
+            logger.exception(e)
+            logger.warning('Unexpected exception occurred - will restart game after 10 minutes')
+            self.save_error_log()
+            handle_notify(
+                self.config.Error_OnePushConfig,
+                title=f"Alas <{self.config_name}> restarting",
+                content=f"<{self.config_name}> Exception occurred - Restarting in 10 minutes",
+            )
+            logger.info('Waiting 10 minutes before restarting game...')
+            self.device.sleep(600)  # 10 minutes
+            self.config.task_call('Restart')
+            return False
 
     def save_error_log(self):
         """
@@ -561,18 +604,23 @@ class AzurLaneAutoScript:
             failed = 0 if success else failed + 1
             deep_set(self.failure_record, keys=task, value=failed)
             if failed >= 3:
-                logger.critical(f"Task `{task}` failed 3 or more times.")
-                logger.critical("Possible reason #1: You haven't used it correctly. "
+                logger.warning(f"Task `{task}` failed 3 or more times.")
+                logger.warning("Possible reason #1: You haven't used it correctly. "
                                 "Please read the help text of the options.")
-                logger.critical("Possible reason #2: There is a problem with this task. "
+                logger.warning("Possible reason #2: There is a problem with this task. "
                                 "Please contact developers or try to fix it yourself.")
-                logger.critical('Request human takeover')
+                logger.warning('Will restart game after 10 minutes')
                 handle_notify(
                     self.config.Error_OnePushConfig,
-                    title=f"Alas <{self.config_name}> crashed",
-                    content=f"<{self.config_name}> RequestHumanTakeover\nTask `{task}` failed 3 or more times.",
+                    title=f"Alas <{self.config_name}> restarting",
+                    content=f"<{self.config_name}> Task failed 3 times - Restarting in 10 minutes\nTask: {task}",
                 )
-                exit(1)
+                logger.info('Waiting 10 minutes before restarting game...')
+                self.device.sleep(600)  # 10 minutes
+                self.config.task_call('Restart')
+                # Reset failure count for this task
+                deep_set(self.failure_record, keys=task, value=0)
+                continue
 
             if success:
                 del_cached_property(self, 'config')
