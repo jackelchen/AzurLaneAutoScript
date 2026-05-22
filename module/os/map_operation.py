@@ -254,13 +254,16 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
 
             # Click
             if self.appear_then_click(MAP_EXIT, offset=(20, 20), interval=3):
+                self.device.sleep(2)
                 continue
             if self.handle_popup_confirm('MAP_EXIT'):
                 self.interval_reset(MAP_EXIT)
+                self.device.sleep(2)
                 continue
             if self.appear_then_click(AUTO_SEARCH_REWARD, offset=(50, 50)):
                 # Sometimes appeared
                 self.device.screenshot_interval_set()
+                self.device.sleep(2)
                 continue
             if self.handle_map_event():
                 self.interval_reset(MAP_EXIT)

@@ -152,7 +152,7 @@ web_formatter = logging.Formatter(
 # Add rich console logger
 stdout_console = console = Console()
 console_hdlr = RichHandler(
-    show_path=False,
+    show_path=True,
     show_time=False,
     rich_tracebacks=True,
     tracebacks_show_locals=True,
