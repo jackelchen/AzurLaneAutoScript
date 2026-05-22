@@ -23,7 +23,7 @@ from module.device.method.remove_warning import remove_shell_warning
 from module.device.method.utils import (PackageNotInstalled, RETRY_TRIES, get_serial_pair, handle_adb_error,
                                         handle_unknown_host_service, possible_reasons, random_port, recv_all,
                                         retry_sleep)
-from module.exception import EmulatorNotRunningError, RequestHumanTakeover
+from module.exception import EmulatorNotRunningError, RequestHumanTakeover, DeviceNotFoundError
 from module.logger import logger
 from module.map.map_grids import SelectedGrids
 
@@ -76,7 +76,10 @@ def retry(func):
                     pass
 
         logger.critical(f'Retry {func.__name__}() failed')
-        raise RequestHumanTakeover
+        if 'screenshot' in func.__name__:
+            raise DeviceNotFoundError(f'connection.py:Retry {func.__name__}() failed')
+        else:
+            raise RequestHumanTakeover
 
     return retry_wrapper
 

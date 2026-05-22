@@ -1,4 +1,5 @@
 import importlib
+from datetime import datetime
 
 from campaign.campaign_hard.campaign_hard import Campaign
 from module.campaign.run import CampaignRun
@@ -50,5 +51,10 @@ class CampaignHard(CampaignRun):
         # self.campaign.equipment_take_off_when_finished()
 
         # Scheduler
-        self.config.task_delay(server_update=True)
+        # self.config.task_delay(server_update="True")
+        # Wednesday is 3 in isoweekday() (Monday=1, Sunday=7)
+        if datetime.now().isoweekday() == 3:
+            self.config.task_delay(server_update="12:00")
+        else:
+            self.config.task_delay(server_update=True)
         self.config.task_call('Reward')

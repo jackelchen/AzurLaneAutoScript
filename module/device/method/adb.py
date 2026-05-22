@@ -13,7 +13,7 @@ from module.device.connection import Connection
 from module.device.method.remove_warning import remove_screenshot_warning
 from module.device.method.utils import (ImageTruncated, PackageNotInstalled, RETRY_TRIES, handle_adb_error,
                                         handle_unknown_host_service, retry_sleep)
-from module.exception import RequestHumanTakeover, ScriptError
+from module.exception import RequestHumanTakeover, ScriptError, DeviceNotFoundError  
 from module.logger import logger
 
 
@@ -71,7 +71,7 @@ def retry(func):
                     pass
 
         logger.critical(f'Retry {func.__name__}() failed')
-        raise RequestHumanTakeover
+        raise DeviceNotFoundError(f'adb.py:Retry {func.__name__}() failed')
 
     return retry_wrapper
 
