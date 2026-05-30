@@ -765,3 +765,11 @@ AzurLaneUncensored:
     display: disabled
 GameManager:
   AutoRestart: true
+
+# ==================== Battery ====================
+
+Battery:
+  Threshold:
+    value: 50
+  Interval:
+    value: 30

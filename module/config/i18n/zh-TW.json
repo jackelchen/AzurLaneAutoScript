@@ -154,6 +154,10 @@
       "name": "認知覺醒",
       "help": ""
     },
+    "Battery": {
+      "name": "Task.Battery.name",
+      "help": "Task.Battery.help"
+    },
     "Daily": {
       "name": "每日任務",
       "help": ""
@@ -2630,6 +2634,20 @@
     "AutoRestart": {
       "name": "自動登錄",
       "help": "遊戲被強制結束後自動登錄遊戲"
+    }
+  },
+  "Battery": {
+    "_info": {
+      "name": "Battery._info.name",
+      "help": "Battery._info.help"
+    },
+    "Threshold": {
+      "name": "Battery.Threshold.name",
+      "help": "Battery.Threshold.help"
+    },
+    "Interval": {
+      "name": "Battery.Interval.name",
+      "help": "Battery.Interval.help"
     }
   },
   "Storage": {

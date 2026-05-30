@@ -154,6 +154,10 @@
       "name": "Awaken",
       "help": ""
     },
+    "Battery": {
+      "name": "Task.Battery.name",
+      "help": "Task.Battery.help"
+    },
     "Daily": {
       "name": "Daily",
       "help": ""
@@ -2630,6 +2634,20 @@
     "AutoRestart": {
       "name": "Automatic Login",
       "help": "Log back into the game when the game has been ended."
+    }
+  },
+  "Battery": {
+    "_info": {
+      "name": "Battery._info.name",
+      "help": "Battery._info.help"
+    },
+    "Threshold": {
+      "name": "Battery.Threshold.name",
+      "help": "Battery.Threshold.help"
+    },
+    "Interval": {
+      "name": "Battery.Interval.name",
+      "help": "Battery.Interval.help"
     }
   },
   "Storage": {

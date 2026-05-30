@@ -474,6 +474,10 @@ class AzurLaneAutoScript:
         from module.daemon.game_manager import GameManager
         GameManager(config=self.config, device=self.device, task="GameManager").run()
 
+    def battery(self):
+        from module.device.battery import Battery
+        Battery(config=self.config, device=self.device).run()
+
     def wait_until(self, future):
         """
         Wait until a specific time.

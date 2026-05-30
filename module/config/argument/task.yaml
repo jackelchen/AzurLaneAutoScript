@@ -223,6 +223,9 @@ Reward:
     Awaken:
       - Scheduler
       - Awaken
+    Battery:
+      - Scheduler
+      - Battery
 
 # ==================== DailyMission ====================
 

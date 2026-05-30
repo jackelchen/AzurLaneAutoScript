@@ -154,6 +154,10 @@
       "name": "Task.Awaken.name",
       "help": ""
     },
+    "Battery": {
+      "name": "Task.Battery.name",
+      "help": "Task.Battery.help"
+    },
     "Daily": {
       "name": "デイリー",
       "help": ""
@@ -2630,6 +2634,20 @@
     "AutoRestart": {
       "name": "GameManager.AutoRestart.name",
       "help": "GameManager.AutoRestart.help"
+    }
+  },
+  "Battery": {
+    "_info": {
+      "name": "Battery._info.name",
+      "help": "Battery._info.help"
+    },
+    "Threshold": {
+      "name": "Battery.Threshold.name",
+      "help": "Battery.Threshold.help"
+    },
+    "Interval": {
+      "name": "Battery.Interval.name",
+      "help": "Battery.Interval.help"
     }
   },
   "Storage": {

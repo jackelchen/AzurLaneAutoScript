@@ -14,7 +14,7 @@ class ManualConfig:
     > Commission > Tactical > Research
     > Exercise
     > Dorm > Meowfficer > Guild > Gacha
-    > Reward
+    > Reward > Battery
     > ShopFrequent > ShopOnce > Shipyard > Freebies
     > PrivateQuarters
     > OpsiExplore

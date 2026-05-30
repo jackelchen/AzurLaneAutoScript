@@ -58,3 +58,11 @@ Freebies:
 # ==================== DailyMission ====================
 
 # ==================== Opsi ====================
+
+# ==================== Battery ====================
+
+Battery:
+  Scheduler:
+    Enable: false
+  Threshold: 50
+  Interval: 30

@@ -456,5 +456,9 @@ class GeneratedConfig:
     # Group `GameManager`
     GameManager_AutoRestart = True
 
+    # Group `Battery`
+    Battery_Threshold = 50
+    Battery_Interval = 30
+
     # Group `Storage`
     Storage_Storage = {}
