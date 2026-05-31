@@ -7246,6 +7246,10 @@
       "Interval": {
         "type": "input",
         "value": 30
+      },
+      "WaitTime": {
+        "type": "input",
+        "value": 20
       }
     },
     "Storage": {

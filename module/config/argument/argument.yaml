@@ -773,3 +773,5 @@ Battery:
     value: 50
   Interval:
     value: 30
+  WaitTime:
+    value: 20
