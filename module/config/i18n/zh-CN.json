@@ -2445,7 +2445,7 @@
     },
     "CustomFilter": {
       "name": "自定义过滤器",
-      "help": "使用自定义过滤器需将 \"港口商店过滤器\" 设置为 \"自定义\"，并阅读 https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/filter_string_cn"
+      "help": "使用自定义过滤器需将 \"港口商店过滤器\" 设置为 \"自定义\"，并阅读 https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/filter_string_cn \n https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/reward_shop_filter_string"
     }
   },
   "OpsiVoucher": {
