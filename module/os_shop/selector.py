@@ -64,15 +64,27 @@ class Selector():
 
     def check_cl1_purple_coins(self, item) -> bool:
         """
-        Check if cl1 is enable and item name is PurpleCoins.
+        Check if yellow coins is less than 200000.
 
         Args:
             item:
 
         Returns:
-            bool: False if cl1 is enable and item name is PurpleCoins.
+            bool: False if yellow coins is less than 200000.
         """
-        return not (self.is_cl1_enabled and item.name == 'PurpleCoins')
+        return not (self._shop_yellow_coins < 200000 and item.name == 'PurpleCoins')
+
+    # def check_cl1_purple_coins(self, item) -> bool:
+    #     """
+    #     Check if cl1 is enable and item name is PurpleCoins.
+    #
+    #     Args:
+    #         item:
+    #
+    #     Returns:
+    #         bool: False if cl1 is enable and item name is PurpleCoins.
+    #     """
+    #     return not (self.is_cl1_enabled and item.name == 'PurpleCoins')
 
     def check_item_count(self, item) -> bool:
         """
