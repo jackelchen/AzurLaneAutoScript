@@ -9,6 +9,7 @@ class EnemySearchingHandler(EnemySearchingHandler_):
         if IN_MAP.match_luma(self.device.image, offset=(200, 5)):
             return True
         if self.match_template_color(MAP_GOTO_GLOBE_FOG, offset=(200, 5)):
+            logger.info('MAP_GOTO_GLOBE_FOG')
             return True
 
         return False
