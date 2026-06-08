@@ -1655,7 +1655,8 @@
       "OilLimit": 1000,
       "RepairThreshold": 0.4,
       "DoRandomMapEvent": true,
-      "AkashiShopFilter": "ActionPoint > PurpleCoins"
+      "AkashiShopFilter": "ActionPoint > PurpleCoins",
+      "YellowCoinsLimitForPurpleCoins": 200000
     },
     "Storage": {
       "Storage": {}

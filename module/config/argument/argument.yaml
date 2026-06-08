@@ -670,6 +670,7 @@ OpsiGeneral:
   DoRandomMapEvent: true
   AkashiShopFilter: |-
     ActionPoint > PurpleCoins
+  YellowCoinsLimitForPurpleCoins: 200000
 OpsiAshBeacon:
   AttackMode:
     value: current

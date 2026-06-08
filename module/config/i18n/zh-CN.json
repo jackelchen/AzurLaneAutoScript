@@ -2353,6 +2353,10 @@
     "AkashiShopFilter": {
       "name": "商店过滤器",
       "help": "一般不需要修改，只买行动力和紫币即可"
+    },
+    "YellowCoinsLimitForPurpleCoins": {
+      "name": "购买紫币阈值",
+      "help": "当黄币低于此值时，不购买紫币。默认200000"
     }
   },
   "OpsiAshBeacon": {

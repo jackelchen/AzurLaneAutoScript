@@ -2353,6 +2353,10 @@
     "AkashiShopFilter": {
       "name": "OpsiGeneral.AkashiShopFilter.name",
       "help": "OpsiGeneral.AkashiShopFilter.help"
+    },
+    "YellowCoinsLimitForPurpleCoins": {
+      "name": "OpsiGeneral.YellowCoinsLimitForPurpleCoins.name",
+      "help": "OpsiGeneral.YellowCoinsLimitForPurpleCoins.help"
     }
   },
   "OpsiAshBeacon": {

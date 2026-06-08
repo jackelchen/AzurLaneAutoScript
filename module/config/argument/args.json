@@ -8361,6 +8361,10 @@
       "AkashiShopFilter": {
         "type": "textarea",
         "value": "ActionPoint > PurpleCoins"
+      },
+      "YellowCoinsLimitForPurpleCoins": {
+        "type": "input",
+        "value": 200000
       }
     },
     "Storage": {

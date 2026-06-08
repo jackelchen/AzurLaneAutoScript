@@ -2353,6 +2353,10 @@
     "AkashiShopFilter": {
       "name": "Akashi Shop Filter",
       "help": "Generally does not need to be modified or re-arranged but can do so if desired\nBuy AP boxes and Purple Coins"
+    },
+    "YellowCoinsLimitForPurpleCoins": {
+      "name": "Purple Coins Purchase Threshold",
+      "help": "Do not buy Purple Coins when Yellow Coins is below this value. Default 200000"
     }
   },
   "OpsiAshBeacon": {

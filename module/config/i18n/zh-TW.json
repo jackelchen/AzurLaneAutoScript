@@ -2353,6 +2353,10 @@
     "AkashiShopFilter": {
       "name": "明石商店過濾器",
       "help": "一般不需要修改，只買行動力和紫幣即可"
+    },
+    "YellowCoinsLimitForPurpleCoins": {
+      "name": "購買紫幣閾值",
+      "help": "當黃幣低於此值時，不購買紫幣。預設200000"
     }
   },
   "OpsiAshBeacon": {

@@ -64,15 +64,16 @@ class Selector():
 
     def check_cl1_purple_coins(self, item) -> bool:
         """
-        Check if yellow coins is less than 200000.
+        Check if yellow coins is less than the configured limit.
 
         Args:
             item:
 
         Returns:
-            bool: False if yellow coins is less than 200000.
+            bool: False if yellow coins is less than YellowCoinsLimitForPurpleCoins.
         """
-        return not (self._shop_yellow_coins < 200000 and item.name == 'PurpleCoins')
+        limit = self.config.OpsiGeneral_YellowCoinsLimitForPurpleCoins
+        return not (self._shop_yellow_coins < limit and item.name == 'PurpleCoins')
 
     # def check_cl1_purple_coins(self, item) -> bool:
     #     """

@@ -383,6 +383,7 @@ class GeneratedConfig:
     OpsiGeneral_RepairThreshold = 0.4
     OpsiGeneral_DoRandomMapEvent = True
     OpsiGeneral_AkashiShopFilter = 'ActionPoint > PurpleCoins'
+    OpsiGeneral_YellowCoinsLimitForPurpleCoins = 200000
 
     # Group `OpsiAshBeacon`
     OpsiAshBeacon_AttackMode = 'current'  # current, current_dossier
