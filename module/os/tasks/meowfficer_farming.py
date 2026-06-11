@@ -21,7 +21,7 @@ class OpsiMeowfficerFarming(OSMap):
             # Without these enabled, CL1 gains 0 profits
             self.config.override(
                 OpsiGeneral_DoRandomMapEvent=True,
-                OpsiGeneral_AkashiShopFilter='ActionPoint',
+                OpsiGeneral_AkashiShopFilter='ActionPoint > PurpleCoins',
                 OpsiFleet_Submarine=False,
             )
             cd = self.nearest_task_cooling_down
