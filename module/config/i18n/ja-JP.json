@@ -1428,7 +1428,7 @@
       "help": ""
     },
     "Favorite": {
-      "name": "好ましい選択",
+      "name": "お気に入りのみ選択",
       "help": ""
     },
     "MinLevel": {
@@ -2106,7 +2106,8 @@
       "sirius": "sirius",
       "new_jersey": "new_jersey",
       "taihou": "taihou",
-      "aegir": "aegir"
+      "aegir": "aegir",
+      "nakhimov": "nakhimov"
     }
   },
   "Daily": {
