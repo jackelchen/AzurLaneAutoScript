@@ -41,4 +41,4 @@ jobs:
       - name: Send failure notification
         if: failure()
         run: |
-          curl -s "https://api.day.app/N7xUCURtR3EWhsotV8oAUD/AzurLaneAutoScript%20%E5%90%8C%E6%AD%A5%E5%A4%B1%E8%B4%A5" || true
+          curl -s "https://api.day.app/N7xUCURtR3EWhsotV8oAUD/AzurLaneAutoScript%20%E5%90%8C%E6%AD%A5%E5%A4%B1%E8%B4%A5?group=github&title=GitHub%20Sync%20Failed" || true
