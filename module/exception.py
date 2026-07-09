@@ -67,5 +67,9 @@ class RequestHumanTakeover(Exception):
     pass
 
 
+class HardNotSatisfied(RequestHumanTakeover):
+    pass
+
+
 class DeviceNotFoundError(Exception):
     pass
