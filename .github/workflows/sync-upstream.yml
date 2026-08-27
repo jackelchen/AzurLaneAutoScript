@@ -41,4 +41,14 @@ jobs:
       - name: Send failure notification
         if: failure()
         run: |
-          curl -s "https://api.day.app/N7xUCURtR3EWhsotV8oAUD/AzurLaneAutoScript%20%E5%90%8C%E6%AD%A5%E5%A4%B1%E8%B4%A5?group=github&title=GitHub%20Sync%20Failed" || true
+          CONFLICT_FILES=$(git diff --name-only --diff-filter=U 2>/dev/null | head -n 10 | tr '\n' ' ')
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          if [ -n "$CONFLICT_FILES" ]; then
+            BODY="合并冲突: ${CONFLICT_FILES}| 查看日志: ${RUN_URL}"
+          else
+            BODY="同步失败(非冲突), 查看日志: ${RUN_URL}"
+          fi
+          echo "Notify: $BODY"
+          curl -sS --max-time 30 -X POST "https://api.day.app/N7xUCURtR3EWhsotV8oAUD" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "{\"title\":\"GitHub Sync Failed\",\"group\":\"github\",\"body\":\"AzurLaneAutoScript $BODY\"}"
