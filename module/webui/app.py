@@ -1589,11 +1589,51 @@ def app():
         except Exception as e:
             return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
     
+    async def set_config(request):
+        """Modify a field in the alas.json config file.
+        JSON body: {"key": "path.to.field", "value": new_value, "config_name": "alas"}
+        """
+        try:
+            body = await request.json()
+            key = body.get("key")
+            value = body.get("value")
+            config_name = body.get("config_name", "alas")
+
+            if not key:
+                return JSONResponse({"status": "error", "message": "Missing 'key'"}, status_code=400)
+
+            from module.config.deep import deep_set, deep_get
+            from module.config.utils import filepath_config
+
+            config_path = filepath_config(config_name)
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config_data = json.load(f)
+            except FileNotFoundError:
+                return JSONResponse({"status": "error", "message": f"Config file not found: {config_path}"}, status_code=404)
+
+            old_value = deep_get(config_data, keys=key, default=None)
+            deep_set(config_data, keys=key, value=value)
+
+            with open(config_path, 'w', encoding='utf-8') as f:
+                json.dump(config_data, f, indent=2, ensure_ascii=False)
+
+            return JSONResponse({
+                "status": "success",
+                "message": f"Set {key}: {old_value} → {value}",
+                "key": key,
+                "old_value": old_value,
+                "new_value": value
+            })
+        except Exception as e:
+            return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+    
     # Add routes to the API app
     api_app.routes.extend([
         Route("/start", start_alas, methods=["POST"]),
         Route("/stop", stop_alas, methods=["POST"]),
         Route("/status", get_alas_status, methods=["GET"]),
+        Route("/config", set_config, methods=["POST"]),
         # Add route for alas.html
         Route("/alas.html", lambda request: FileResponse("alas.html")),
     ])
