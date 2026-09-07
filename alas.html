@@ -44,9 +44,9 @@
             display: flex;
             gap: 10px;
             margin-top: 30px;
+            flex-wrap: wrap;
         }
         button {
-            flex: 1;
             padding: 12px;
             border: none;
             border-radius: 4px;
@@ -54,6 +54,17 @@
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.3s;
+        }
+        #startBtn, #stopBtn, #backBtn {
+            flex: 1;
+        }
+        #scheduleBtn {
+            width: 100%;
+            background-color: #ff9800;
+            color: white;
+        }
+        #scheduleBtn:hover {
+            background-color: #f57c00;
         }
         #startBtn {
             background-color: #4CAF50;
@@ -107,11 +118,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>Alas 快速控制器</h1>
-        
         <div class="form-group">
             <label for="alasUrl">Alas 访问地址:</label>
-            <input type="text" id="alasUrl" value="http://192.168.1.100:28832" placeholder="例如: http://192.168.1.100:22267">
+            <input type="text" id="alasUrl" placeholder="例如: http://192.168.1.100:22267">
         </div>
         
         <div class="buttons">
@@ -121,6 +130,10 @@
         </div>
         
         <div id="status"></div>
+        
+        <div class="buttons">
+            <button id="scheduleBtn">每日+困难修改到12点</button>
+        </div>
     </div>
     
     <script>
@@ -136,6 +149,48 @@
             const baseUrl = document.getElementById('alasUrl').value;
             window.location.href = baseUrl;
         });
+        
+        document.getElementById('scheduleBtn').addEventListener('click', scheduleNoon);
+        
+        // 计算下一个中午12点, 如果当前已过12点则取明天
+        function getNextNoon() {
+            const now = new Date();
+            const noon = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+            if (now >= noon) {
+                noon.setDate(noon.getDate() + 1);
+            }
+            const y = noon.getFullYear();
+            const m = String(noon.getMonth() + 1).padStart(2, '0');
+            const d = String(noon.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d} 12:00:00`;
+        }
+        
+        async function setConfig(key, value) {
+            const baseUrl = document.getElementById('alasUrl').value;
+            const apiUrl = `${baseUrl}/api/config`;
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: key, value: value })
+            });
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.message || `HTTP ${response.status}`);
+            }
+            return response.json();
+        }
+        
+        async function scheduleNoon() {
+            const noon = getNextNoon();
+            showLoading(`正在设置 Daily 和 Hard 下次运行时间为 ${noon}...`);
+            try {
+                await setConfig('Daily.Scheduler.NextRun', noon);
+                await setConfig('Hard.Scheduler.NextRun', noon);
+                showStatus(`已设置 Daily 和 Hard 下次运行时间为 ${noon}`, 'success');
+            } catch (error) {
+                showStatus(`设置失败: ${error.message}`, 'error');
+            }
+        }
         
         function showStatus(message, type) {
             const statusDiv = document.getElementById('status');
@@ -207,8 +262,9 @@
             });
         }
         
-        // 页面加载时检查 Alas 状态
+        // 用当前访问来源自动填充地址（局域网IP或外网域名均可）
         window.onload = function() {
+            document.getElementById('alasUrl').value = window.location.origin;
             checkStatus();
         };
         
