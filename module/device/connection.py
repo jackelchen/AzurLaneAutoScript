@@ -478,6 +478,9 @@ class Connection(ConnectionAttr):
         logger.info(f'Reverse server listening on {host_port[0]}:{host_port[1]}, '
                     f'client can send data to {host_port[2]}:{host_port[3]}')
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # Allow re-bind immediately after the socket enters TIME_WAIT, otherwise
+        # rebinding the same port after a restart raises "Address already in use"
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind(host_port[:2])
         server.settimeout(5)
         server.listen(5)

@@ -88,6 +88,9 @@ class Device(Screenshot, Control, AppControl):
                     )
                     raise RequestHumanTakeover
 
+        # Wake up device screen so the first screenshot is not pure black
+        self.wake_screen()
+
         # Auto-fill emulator info
         if IS_WINDOWS and self.config.EmulatorInfo_Emulator == 'auto':
             _ = self.emulator_instance
@@ -105,6 +108,28 @@ class Device(Screenshot, Control, AppControl):
                 self.early_maatouch_init()
             if self.config.Emulator_ControlMethod == 'minitouch':
                 self.early_minitouch_init()
+
+    def wake_screen(self):
+        """
+        Wake up the device screen so the first screenshot is not pure black.
+        Best-effort only, never raises if something fails.
+        """
+        try:
+            state = self.adb_shell(['dumpsys', 'power'])
+            # 'Display Power: state=OFF' / 'mWakefulness=Asleep' / 'mWakefulness=Doze'
+            # all mean the screen is not actively showing content.
+            off = 'Display Power: state=OFF' in state \
+                or 'mWakefulness=Asleep' in state \
+                or 'mWakefulness=Doze' in state
+            if not off:
+                return
+            logger.info('Screen is off, waking up device')
+            self.adb_shell(['input', 'keyevent', '224'])  # KEYCODE_WAKEUP
+            self.sleep(0.8)
+            # Dismiss swipe-style lock screen (no password)
+            self.adb_shell(['input', 'swipe', '640', '1200', '640', '300'])
+        except Exception as e:
+            logger.warning(f'Failed to wake device screen: {e}')
 
     def run_simple_screenshot_benchmark(self):
         """
