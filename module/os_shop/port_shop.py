@@ -34,7 +34,7 @@ class PortShop(OSStatus, OSShopUI, Selector, MapEventHandler):
         """
         image = self.image_crop((360, 320, 410, 700))
         result = sum([template.match_multi(image) for template in self.TEMPLATES], [])
-        logger.attr('Costs', f'{result}')
+        logger.attr('port_shop Costs', f'{result}')
         return Points([(0., m.area[1]) for m in result]).group(threshold=5)
 
     @cached_property
@@ -45,6 +45,7 @@ class PortShop(OSStatus, OSShopUI, Selector, MapEventHandler):
         )
         os_shop_items.load_template_folder('./assets/shop/os')
         os_shop_items.load_cost_template_folder('./assets/shop/os_cost')
+        logger.info('port_shop Shop items loaded')
         return os_shop_items
 
     def _get_os_shop_grid(self) -> ButtonGrid:
@@ -80,18 +81,19 @@ class PortShop(OSStatus, OSShopUI, Selector, MapEventHandler):
         self.os_shop_items.grids = self._get_os_shop_grid()
         if self.config.SHOP_EXTRACT_TEMPLATE:
             self.os_shop_items.extract_template(self.device.image, './assets/shop/os')
+            logger.info('port_shop Shop items extracted')
         self.os_shop_items.predict(self.device.image, counter=True, shop_index=shop_index, scroll_pos=scroll_pos)
         shop_items = self.os_shop_items.items
 
         if len(shop_items):
             min_row = self.os_shop_items.grids[0, 0].area[1]
             row = [str(item) for item in shop_items if item.button[1] == min_row]
-            logger.info(f'Shop row 1: {row}')
+            logger.info(f'port_shop Shop row 1: {row}')
             row = [str(item) for item in shop_items if item.button[1] != min_row]
-            logger.info(f'Shop row 2: {row}')
+            logger.info(f'port_shop Shop row 2: {row}')
             return shop_items
         else:
-            logger.info('No shop items found')
+            logger.info('port_shop No shop items found')
 
         return []
 

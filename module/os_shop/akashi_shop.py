@@ -59,6 +59,7 @@ class AkashiShop(OSStatus, OSShopUI, Selector, MapEventHandler):
         )
         shop_items.load_template_folder('./assets/shop/os')
         shop_items.load_cost_template_folder('./assets/shop/os_cost')
+        logger.info('akashi_shop Shop items loaded')
         return shop_items
 
     def os_shop_get_items_in_akashi(self) -> List[Item]:
@@ -71,18 +72,19 @@ class AkashiShop(OSStatus, OSShopUI, Selector, MapEventHandler):
         """
         if self.config.SHOP_EXTRACT_TEMPLATE:
             self.os_akashi_shop_items.extract_template(self.device.image, './assets/shop/os')
+            logger.info('akashi_shop Shop items extracted')
         self.os_akashi_shop_items.predict(self.device.image)
 
         items = self.os_akashi_shop_items.items
         if len(items):
             min_row = self.os_akashi_shop_items.grids[0, 0].area[1]
             row = [str(item) for item in items if item.button[1] == min_row]
-            logger.info(f'Shop row 1: {row}')
+            logger.info(f'akashi_shop Shop row 1: {row}')
             row = [str(item) for item in items if item.button[1] != min_row]
-            logger.info(f'Shop row 2: {row}')
+            logger.info(f'akashi_shop Shop row 2: {row}')
             return items
         else:
-            logger.info('No shop items found')
+            logger.info('akashi_shop No shop items found')
             return []
 
     def os_shop_get_item_to_buy_in_akashi(self) -> Item:
