@@ -1,0 +1,54 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    - cron: '0 0,12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/LmeSzinc/AzurLaneAutoScript.git
+          git fetch upstream
+
+      - name: Sync with upstream
+        run: |
+          git checkout master
+          git merge --no-ff upstream/master --allow-unrelated-histories -m "Merge upstream/master"
+          
+      - name: Push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push origin master
+
+      - name: Send failure notification
+        if: failure()
+        run: |
+          CONFLICT_FILES=$(git diff --name-only --diff-filter=U 2>/dev/null | head -n 10 | tr '\n' ' ')
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          if [ -n "$CONFLICT_FILES" ]; then
+            BODY="合并冲突: ${CONFLICT_FILES}| 查看日志: ${RUN_URL}"
+          else
+            BODY="同步失败(非冲突), 查看日志: ${RUN_URL}"
+          fi
+          echo "Notify: $BODY"
+          curl -sS --max-time 30 -X POST "https://api.day.app/N7xUCURtR3EWhsotV8oAUD" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "{\"title\":\"GitHub Sync Failed\",\"group\":\"github\",\"body\":\"AzurLaneAutoScript $BODY\"}"
