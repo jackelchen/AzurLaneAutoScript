@@ -1539,10 +1539,114 @@ def app():
             return
         app_manage()
 
-    app = asgi_app(
+    # Add API endpoints for controlling Alas
+    from starlette.applications import Starlette
+    from starlette.responses import JSONResponse, FileResponse
+    from starlette.routing import Route
+    
+    # Create a Starlette instance
+    api_app = Starlette()
+    
+    async def start_alas(request):
+        """Start Alas process"""
+        try:
+            # Get config_name from query parameter
+            config_name = request.query_params.get("config_name", "alas")
+            manager = ProcessManager.get_manager(config_name)
+            if not manager.alive:
+                manager.start(func="alas", ev=updater.event)
+                return JSONResponse({"status": "success", "message": f"Alas {config_name} started"})
+            else:
+                return JSONResponse({"status": "success", "message": f"Alas {config_name} is already running"})
+        except Exception as e:
+            return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+    
+    async def stop_alas(request):
+        """Stop Alas process"""
+        try:
+            # Get config_name from query parameter
+            config_name = request.query_params.get("config_name", "alas")
+            manager = ProcessManager.get_manager(config_name)
+            if manager.alive:
+                manager.stop()
+                return JSONResponse({"status": "success", "message": f"Alas {config_name} stopped"})
+            else:
+                return JSONResponse({"status": "success", "message": f"Alas {config_name} is not running"})
+        except Exception as e:
+            return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+    
+    async def get_alas_status(request):
+        """Get Alas process status"""
+        try:
+            # Get config_name from query parameter
+            config_name = request.query_params.get("config_name", "alas")
+            manager = ProcessManager.get_manager(config_name)
+            return JSONResponse({
+                "status": "success",
+                "running": manager.alive,
+                "state": manager.state
+            })
+        except Exception as e:
+            return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+    
+    async def set_config(request):
+        """Modify a field in the alas.json config file.
+        JSON body: {"key": "path.to.field", "value": new_value, "config_name": "alas"}
+        """
+        try:
+            body = await request.json()
+            key = body.get("key")
+            value = body.get("value")
+            config_name = body.get("config_name", "alas")
+
+            if not key:
+                return JSONResponse({"status": "error", "message": "Missing 'key'"}, status_code=400)
+
+            from module.config.deep import deep_set, deep_get
+            from module.config.utils import filepath_config
+
+            config_path = filepath_config(config_name)
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config_data = json.load(f)
+            except FileNotFoundError:
+                return JSONResponse({"status": "error", "message": f"Config file not found: {config_path}"}, status_code=404)
+
+            old_value = deep_get(config_data, keys=key, default=None)
+            deep_set(config_data, keys=key, value=value)
+
+            with open(config_path, 'w', encoding='utf-8') as f:
+                json.dump(config_data, f, indent=2, ensure_ascii=False)
+
+            return JSONResponse({
+                "status": "success",
+                "message": f"Set {key}: {old_value} → {value}",
+                "key": key,
+                "old_value": old_value,
+                "new_value": value
+            })
+        except Exception as e:
+            return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+    
+    # Add routes to the API app
+    api_app.routes.extend([
+        Route("/start", start_alas, methods=["POST"]),
+        Route("/stop", stop_alas, methods=["POST"]),
+        Route("/status", get_alas_status, methods=["GET"]),
+        Route("/config", set_config, methods=["POST"]),
+        # Add route for alas.html
+        Route("/alas", lambda request: FileResponse("alas.html")),
+    ])
+    
+    # Mount FastAPI app to the main application
+    from starlette.routing import Mount
+    from module.webui.fastapi import asgi_app as create_asgi_app
+    
+    # Create the main ASGI app
+    main_app = create_asgi_app(
         applications=[index, manage],
         cdn=cdn,
-        static_dir=None,
+        static_dir=".",  # Set static directory to project root
         debug=True,
         on_startup=[
             startup,
@@ -1552,5 +1656,17 @@ def app():
         ],
         on_shutdown=[clearup],
     )
-
-    return app
+    
+    # Add API routes to the main app
+    main_app.routes.append(
+        Mount("/api", app=api_app)
+    )
+    
+    # Add routes for HTML files
+    from starlette.routing import Route
+    from starlette.responses import FileResponse
+    main_app.routes.extend([
+        Route("/alas", lambda request: FileResponse("alas.html")),
+    ])
+    
+    return main_app
