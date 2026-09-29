@@ -1,4 +1,5 @@
 import numpy as np
+from datetime import datetime
 
 import module.config.server as server
 from module.base.utils import get_color
@@ -339,4 +340,9 @@ class Daily(Combat):
         self.daily_run()
 
         # Cannot stay in page_daily, because order is disordered.
-        self.config.task_delay(server_update=True)
+        # self.config.task_delay(server_update="True")
+        # Wednesday is 3 in isoweekday() (Monday=1, Sunday=7)
+        if datetime.now().isoweekday() == 3:
+            self.config.task_delay(server_update="12:00")
+        else:
+            self.config.task_delay(server_update=True)
