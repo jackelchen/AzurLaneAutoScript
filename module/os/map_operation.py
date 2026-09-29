@@ -256,6 +256,7 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
             if self.appear_then_click(MAP_EXIT, offset=(20, 20), interval=3):
                 continue
             if self.handle_popup_confirm('MAP_EXIT'):
+                self.device.sleep(10)
                 self.interval_reset(MAP_EXIT)
                 continue
             if self.appear_then_click(AUTO_SEARCH_REWARD, offset=(50, 50)):
