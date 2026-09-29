@@ -137,7 +137,7 @@ logger_debug = False
 logger = logging.getLogger('alas')
 logger.setLevel(logging.DEBUG if logger_debug else logging.INFO)
 file_formatter = logging.Formatter(
-    fmt='%(asctime)s.%(msecs)03d | %(levelname)s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    fmt='%(asctime)s.%(msecs)03d | %(filename)s:%(lineno)d %(levelname)s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 console_formatter = logging.Formatter(
     fmt='%(asctime)s.%(msecs)03d │ %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 web_formatter = logging.Formatter(
@@ -152,7 +152,7 @@ web_formatter = logging.Formatter(
 # Add rich console logger
 stdout_console = console = Console()
 console_hdlr = RichHandler(
-    show_path=False,
+    show_path=True,
     show_time=False,
     rich_tracebacks=True,
     tracebacks_show_locals=True,
