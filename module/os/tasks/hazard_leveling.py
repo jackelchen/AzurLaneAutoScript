@@ -12,9 +12,11 @@ class OpsiHazard1Leveling(OSMap):
         )
         if not self.config.is_task_enabled('OpsiMeowfficerFarming'):
             self.config.cross_set(keys='OpsiMeowfficerFarming.Scheduler.Enable', value=True)
+        # 平时保留400点行动力, 并遵循 get_action_point_limit()
+        preserve = min(self.get_action_point_limit(), 400)
         while True:
-            # Limited action point preserve of hazard 1 to 200
-            self.config.OS_ACTION_POINT_PRESERVE = 200
+            # 侵蚀1练级保留400点行动力
+            self.config.OS_ACTION_POINT_PRESERVE = preserve
             if self.config.is_task_enabled('OpsiAshBeacon') \
                     and not self._ash_fully_collected \
                     and self.config.cross_get("OpsiAshBeacon.OpsiAshBeacon.EnsureFullyCollected", True):
