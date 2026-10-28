@@ -48,9 +48,9 @@ def setup_logging(log_dir=None):
         "%(asctime)s %(levelname)-5s [%(process)d/%(threadName)s] %(filename)s:%(lineno)d %(funcName)s() - %(message)s"
     )
     
-    # 文件handler - 每周轮转，保留4周
+    # 文件handler - 每周轮转，保留2周
     file_handler = logging.handlers.TimedRotatingFileHandler(
-        log_file, when='W0', interval=1, backupCount=4, encoding='utf-8'
+        log_file, when='W0', interval=1, backupCount=2, encoding='utf-8'
     )
     file_handler.setFormatter(formatter)
     
