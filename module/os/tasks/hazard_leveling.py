@@ -30,14 +30,14 @@ class OpsiHazard1Leveling(OSMap):
             if self.get_yellow_coins() < self.yellow_coins_preserve:
                 logger.info(f'Reach the limit of yellow coins, preserve={self.yellow_coins_preserve}')
                 with self.config.multi_set():
-                    self.config.task_delay(server_update=True)
+                    self.config.task_delay(minute=60, server_update=True)
                     if not self.is_in_opsi_explore():
                         cd = self.nearest_task_cooling_down
                         if cd is None:
                             for task in ['OpsiAbyssal', 'OpsiStronghold', 'OpsiObscure']:
                                 if self.config.is_task_enabled(task):
                                     self.config.task_call(task)
-                        self.config.task_call('OpsiMeowfficerFarming')
+                        self.config.task_call('OpsiMeowfficerFarming', force_call=False)
                 self.config.task_stop()
 
             self.get_current_zone()
@@ -50,14 +50,14 @@ class OpsiHazard1Leveling(OSMap):
             self.action_point_set(cost=70, keep_current_ap=keep_current_ap, check_rest_ap=True)
             if self._action_point_total >= 3000:
                 with self.config.multi_set():
-                    self.config.task_delay(server_update=True)
+                    self.config.task_delay(minute=60, server_update=True)
                     if not self.is_in_opsi_explore():
                         cd = self.nearest_task_cooling_down
                         if cd is None:
                             for task in ['OpsiAbyssal', 'OpsiStronghold', 'OpsiObscure']:
                                 if self.config.is_task_enabled(task):
                                     self.config.task_call(task)
-                        self.config.task_call('OpsiMeowfficerFarming')
+                        self.config.task_call('OpsiMeowfficerFarming', force_call=False)
                 self.config.task_stop()
 
             if self.config.OpsiHazard1Leveling_TargetZone != 0:
