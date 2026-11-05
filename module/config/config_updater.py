@@ -642,7 +642,9 @@ class ConfigUpdater:
             deep_set(new, 'Alas.DropRecord.AzurStatsID', None)
         else:
             deep_default(new, 'Alas.DropRecord.AzurStatsID', random_id())
-        if deep_get(new, keys='OpsiHazard1Leveling.Scheduler.Enable'):
+        # 仅在月末7天内（距大世界重置不足7天）开启侵蚀1练级时，才连带开启短猫相接
+        if deep_get(new, keys='OpsiHazard1Leveling.Scheduler.Enable') \
+                and get_os_reset_remain() <= 6:
             deep_set(new, keys='OpsiMeowfficerFarming.Scheduler.Enable', value=True)
         # Update to latest event
         server = to_server(deep_get(new, 'Alas.Emulator.PackageName', 'cn'))

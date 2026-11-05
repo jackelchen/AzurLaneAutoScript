@@ -1,3 +1,4 @@
+from module.config.utils import get_os_reset_remain
 from module.logger import logger
 from module.os.map import OSMap
 
@@ -10,7 +11,9 @@ class OpsiHazard1Leveling(OSMap):
             OpsiGeneral_DoRandomMapEvent=True,
             OpsiGeneral_AkashiShopFilter='ActionPoint > PurpleCoins',
         )
-        if not self.config.is_task_enabled('OpsiMeowfficerFarming'):
+        # 月末7天内（距大世界重置不足7天）才连带开启短猫相接，平时需手动开启
+        if get_os_reset_remain() <= 6 \
+                and not self.config.is_task_enabled('OpsiMeowfficerFarming'):
             self.config.cross_set(keys='OpsiMeowfficerFarming.Scheduler.Enable', value=True)
         # 平时保留600点行动力, 并遵循 get_action_point_limit()
         preserve = min(self.get_action_point_limit(), 600)
