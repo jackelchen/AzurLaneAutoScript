@@ -88,7 +88,7 @@ class Device(Screenshot, Control, AppControl):
                     )
                     raise RequestHumanTakeover
 
-        # Wake up device screen so the first screenshot is not pure black
+        # 唤醒设备屏幕, 避免首次截图全黑
         self.wake_screen()
 
         # Auto-fill emulator info
@@ -109,27 +109,64 @@ class Device(Screenshot, Control, AppControl):
             if self.config.Emulator_ControlMethod == 'minitouch':
                 self.early_minitouch_init()
 
+    def screen_state(self):
+        """
+        通过 `dumpsys power` 获取设备屏幕状态
+
+        Returns:
+            str: 屏幕点亮时返回 'on', 息屏时返回 'off'
+        """
+        output = self.adb_shell(['dumpsys', 'power'])
+        lower = output.lower()
+        # mWakefulness 的取值是 Awake / Asleep / Dozing / Dreaming / Nap / Shutting down
+        # 注意是 Dozing 而不是 Doze, 息屏进入 doze 时旧代码会漏判
+        wakefulness = None
+        for line in output.splitlines():
+            line = line.strip()
+            if line.startswith('mWakefulness='):
+                wakefulness = line.partition('=')[2].strip().lower()
+                break
+
+        if wakefulness is None:
+            # 部分机型不输出 mWakefulness, 退化为匹配 Display Power / mScreenState
+            for marker in (
+                    'display power: state=off',
+                    'display power: state=doze',
+                    'mscreenstate=off',
+                    'mscreenon=false',
+            ):
+                if marker in lower:
+                    return 'off'
+            return 'on'
+
+        if wakefulness != 'awake':
+            return 'off'
+        # 有些 ROM 在 AOD / 省电状态下仍报 Awake, 但屏幕实际已熄灭, 需要再确认 Display Power
+        for marker in ('display power: state=off', 'display power: state=doze'):
+            if marker in lower:
+                return 'off'
+        return 'on'
+
     def wake_screen(self):
         """
-        Wake up the device screen so the first screenshot is not pure black.
-        Best-effort only, never raises if something fails.
+        唤醒设备屏幕, 避免首次截图全黑
+        尽力而为, 失败只记录警告, 不抛出异常
         """
         try:
-            state = self.adb_shell(['dumpsys', 'power'])
-            # 'Display Power: state=OFF' / 'mWakefulness=Asleep' / 'mWakefulness=Doze'
-            # all mean the screen is not actively showing content.
-            off = 'Display Power: state=OFF' in state \
-                or 'mWakefulness=Asleep' in state \
-                or 'mWakefulness=Doze' in state
-            if not off:
+            if self.screen_state() == 'on':
                 return
-            logger.info('Screen is off, waking up device')
-            self.adb_shell(['input', 'keyevent', '224'])  # KEYCODE_WAKEUP
-            self.sleep(0.8)
-            # Dismiss swipe-style lock screen (no password)
-            self.adb_shell(['input', 'swipe', '640', '1200', '640', '300'])
+
+            logger.info('检测到屏幕息屏, 开始唤醒设备')
+            for _ in range(3):
+                self.adb_shell(['input', 'keyevent', '224'])  # KEYCODE_WAKEUP
+                # 老机型亮屏响应较慢, 每次多等一会再复查电源状态
+                self.sleep(2)
+                if self.screen_state() == 'on':
+                    break
+            else:
+                logger.warning('尝试唤醒 3 次后屏幕仍未点亮')
         except Exception as e:
-            logger.warning(f'Failed to wake device screen: {e}')
+            logger.warning(f'唤醒屏幕失败: {e}')
 
     def run_simple_screenshot_benchmark(self):
         """
