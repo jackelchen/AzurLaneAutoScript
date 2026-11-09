@@ -1,6 +1,7 @@
 from module.config.utils import get_os_reset_remain
 from module.logger import logger
 from module.os.map import OSMap
+from module.os_handler.action_point import ActionPointLimit
 
 
 class OpsiHazard1Leveling(OSMap):
@@ -47,7 +48,14 @@ class OpsiHazard1Leveling(OSMap):
             keep_current_ap = True
             if self.config.OpsiGeneral_BuyActionPointLimit > 0:
                 keep_current_ap = False
-            self.action_point_set(cost=70, keep_current_ap=keep_current_ap, check_rest_ap=True)
+            try:
+                self.action_point_set(cost=70, keep_current_ap=keep_current_ap, check_rest_ap=True)
+            except ActionPointLimit:
+                # 行动力已低于保底, 无法继续练级, 但仍需按规则处理短猫开关
+                self.meowfficer_switch_by_action_point()
+                raise
+
+            self.meowfficer_switch_by_action_point()
             if self._action_point_total >= 3000:
                 with self.config.multi_set():
                     self.config.task_delay(minute=60, server_update=True)
@@ -72,3 +80,25 @@ class OpsiHazard1Leveling(OSMap):
 
             self.handle_after_auto_search()
             self.config.check_task_switch()
+
+    def meowfficer_switch_by_action_point(self):
+        """
+        按总行动力(当前行动力 + 箱子行动力)决定短猫相接的开关
+
+        - 月末7天内: 不处理, 由月末规则保证开启
+        - 总行动力 >= 3000: 开启
+        - 总行动力 < 1000: 关闭
+        - 1000 ~ 3000: 保持当前状态
+        """
+        if get_os_reset_remain() <= 6:
+            return
+
+        total = self._action_point_total
+        enabled = self.config.is_task_enabled('OpsiMeowfficerFarming')
+
+        if total >= 3000 and not enabled:
+            logger.info(f'总行动力 {total} >= 3000, 开启短猫相接')
+            self.config.cross_set(keys='OpsiMeowfficerFarming.Scheduler.Enable', value=True)
+        elif total < 1000 and enabled:
+            logger.info(f'总行动力 {total} < 1000, 关闭短猫相接')
+            self.config.cross_set(keys='OpsiMeowfficerFarming.Scheduler.Enable', value=False)
