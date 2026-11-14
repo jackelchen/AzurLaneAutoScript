@@ -483,6 +483,35 @@ class AzurLaneAutoScript:
         from module.daemon.game_manager import GameManager
         GameManager(config=self.config, device=self.device, task="GameManager").run()
 
+    def _health_check_during_wait(self):
+        """
+        空闲等待期间的健康检查.
+
+        Returns:
+            str: 'black' 屏幕全黑, 'dead' 进程已死亡, 'ok' 正常或检查异常.
+        """
+        try:
+            # 检查 1: 游戏进程是否还活着 (进程死了立即触发, 不需要二次确认)
+            if not self.device.app_is_running():
+                logger.warning('健康检查: 游戏进程已死亡')
+                return 'dead'
+
+            # 检查 2: 屏幕是否全黑 (游戏渲染崩溃/黑屏)
+            self.device.screenshot()
+            from module.base.utils import get_color
+            color = get_color(self.device.image, area=(0, 0, 1280, 720))
+            if sum(color) < 1:
+                logger.warning(f'健康检查: 屏幕全黑 (color={color})')
+                return 'black'
+
+            # 正常
+            logger.info('健康检查: 一切正常')
+            return 'ok'
+        except Exception as e:
+            # 健康检查本身不应打断等待, 只记录异常
+            logger.warning(f'健康检查异常: {e}')
+            return 'ok'
+
     def wait_until(self, future):
         """
         Wait until a specific time.
@@ -495,6 +524,15 @@ class AzurLaneAutoScript:
         """
         future = future + timedelta(seconds=1)
         self.config.start_watching()
+
+        # 空闲等待期间的健康检查: 等待时长 >= 15 分钟才启用, 每 10 分钟检查一次
+        # 用于发现游戏黑屏/进程死亡等异常, 避免下一个任务启动时才发现
+        wait_seconds = (future - datetime.now()).total_seconds()
+        health_enabled = wait_seconds >= 900
+        health_interval_count = 120  # 120 * 5s = 600s = 10 分钟
+        health_counter = 0
+        health_black_count = 0  # 连续黑屏次数
+
         while 1:
             if datetime.now() > future:
                 return True
@@ -508,6 +546,49 @@ class AzurLaneAutoScript:
 
             if self.config.should_reload():
                 return False
+
+            # 健康检查
+            if health_enabled:
+                health_counter += 1
+                if health_counter >= health_interval_count:
+                    health_counter = 0
+                    result = self._health_check_during_wait()
+                    if result == 'dead':
+                        # 进程死亡立即触发, 无需二次确认
+                        logger.warning('健康检查: 触发 Restart (进程死亡)')
+                        self.config.task_call('Restart')
+                        return False
+                    elif result == 'black':
+                        # 屏幕全黑: 先尝试唤醒 (息屏场景), 唤醒后立即复查, 恢复显示即视为正常
+                        logger.warning('健康检查: 屏幕全黑, 尝试唤醒屏幕')
+                        self.device.wake_screen()
+                        time.sleep(3)  # 等待亮屏后游戏重新渲染
+                        result = self._health_check_during_wait()
+                        if result == 'ok':
+                            # 息屏场景唤醒自愈成功, 不计入黑屏
+                            logger.info('健康检查: 唤醒后屏幕恢复显示, 重置黑屏计数')
+                            health_black_count = 0
+                        elif result == 'dead':
+                            # 复查发现进程死亡, 立即触发
+                            logger.warning('健康检查: 触发 Restart (进程死亡)')
+                            self.config.task_call('Restart')
+                            return False
+                        else:
+                            # 唤醒后仍黑屏, 属于游戏渲染崩溃而非息屏
+                            health_black_count += 1
+                            if health_black_count >= 2:
+                                # 连续 2 次唤醒无效才触发, 避免误报
+                                logger.warning(f'健康检查: 连续 {health_black_count} 次唤醒后仍黑屏, 触发 Restart')
+                                self.save_error_log()
+                                self.config.task_call('Restart')
+                                return False
+                            else:
+                                logger.warning(f'健康检查: 唤醒后仍黑屏, 下次检查再确认 (已记录 {health_black_count}/2)')
+                    else:
+                        # 检查正常, 重置黑屏计数
+                        if health_black_count > 0:
+                            logger.info('健康检查: 屏幕恢复正常, 重置黑屏计数')
+                            health_black_count = 0
 
     def get_next_task(self):
         """

@@ -155,6 +155,7 @@ class Device(Screenshot, Control, AppControl, Input):
         """
         try:
             if self.screen_state() == 'on':
+                logger.info('屏幕已点亮, 无需唤醒')
                 return
 
             logger.info('检测到屏幕息屏, 开始唤醒设备')

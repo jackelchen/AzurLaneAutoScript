@@ -163,6 +163,8 @@ class LoginHandler(UI):
 
     def app_restart(self):
         logger.hr('App restart')
+        # 息屏状态下重启游戏, 登录阶段会长时间截图异常, 先唤醒屏幕
+        self.device.wake_screen()
         self.device.app_stop()
         self.device.app_start()
         self.handle_app_login()
