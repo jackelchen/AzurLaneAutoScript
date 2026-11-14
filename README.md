@@ -51,6 +51,21 @@ GUI development, thanks **[@18870](https://github.com/18870)** , say HURRAY.
 
 
 
+## 真机修改
+- **修改分辨率
+
+  adb shell wm size 720x1280
+  
+  adb shell wm density 320
+
+- **恢复分辨率**
+
+  adb shell wm size reset
+
+  adb shell wm density reset
+
+
+
 ## 正确地使用调度器
 
 - **理解 *任务* 和 *调度器* 的概念**
